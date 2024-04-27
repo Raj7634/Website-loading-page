@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Listing</title>
+  <style>
+    body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: #f0f0f0;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  margin: 0;
+  background-color: rgb(45, 44, 44);
+  color: white;
+  padding: 15px 15px;
+}
+
+input[type="text"], select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+main {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.product-card {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.product-card img {
+  width: 100%;
+  height: auto;
+}
+
+.product-card h3 {
+  margin: 10px 0;
+}
+
+.product-card p {
+  font-weight: bold;
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Product Listing Page</h1>
+    <div>
+      <input type="text" id="searchInput" placeholder="Search...">
+      <select id="categoryFilter">
+        <option value="">All Categories</option>
+      </select>
+      <select id="sortOrder">
+        <option value="asc">Price Low to High</option>
+        <option value="desc">Price High to Low</option>
+      </select>
+    </div>
+  </header>
+  <main id="productList"></main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+  const productList = document.getElementById('productList');
+  const searchInput = document.getElementById('searchInput');
+  const categoryFilter = document.getElementById('categoryFilter');
+  const sortOrder = document.getElementById('sortOrder');
+
+  
+  fetch('https://fakestoreapi.com/products/categories')
+    .then(response => response.json())
+    .then(categories => {
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categoryFilter.appendChild(option);
+      });
+    });
+
+  function fetchProducts() {
+    const searchQuery = searchInput.value.toLowerCase();
+    const category = categoryFilter.value;
+    const order = sortOrder.value;
+
+    let url = 'https://fakestoreapi.com/products';
+
+    // Construct URL based on category selection
+    if (category) {
+      url += `/category/${category}`;
+    }
+
+    fetch(url)
+      .then(response => response.json())
+      .then(products => {
+        // Filter by search query
+        let filteredProducts = products.filter(product =>
+          product.title.toLowerCase().includes(searchQuery)
+        );
+
+        // Sort products
+        if (order === 'asc') {
+          filteredProducts.sort((a, b) => a.price - b.price);
+        } else if (order === 'desc') {
+          filteredProducts.sort((a, b) => b.price - a.price);
+        }
+
+        productList.innerHTML = '';
+        filteredProducts.forEach(product => {
+          const productCard = document.createElement('div');
+          productCard.classList.add('product-card');
+          productCard.innerHTML = `
+            <img src="${product.image}" alt="${product.title}">
+            <h3>${product.title}</h3>
+            <p>$${product.price}</p>
+          `;
+          productList.appendChild(productCard);
+        });
+      });
+  }
+
+  searchInput.addEventListener('input', fetchProducts);
+  categoryFilter.addEventListener('change', fetchProducts);
+  sortOrder.addEventListener('change', fetchProducts);
+
+
+  fetchProducts();
+});
+
+ </script>
+</body>
+</html>
